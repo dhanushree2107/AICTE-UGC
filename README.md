@@ -78,3 +78,6 @@ aicte-ug/
    - Use the bottom-right AI Helpdesk Assistant bubble for interactive Q&A.
    - Switch color themes (Light/Dark) in the header menu.
    - Log in to experience customized boards (College console, document upload, review panel, EVC scheduling).
+# AICTE-UG
+# AICTE-UG
+# AICTE-UG
