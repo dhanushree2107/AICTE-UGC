@@ -1,0 +1,13 @@
+node_modules/
+.angular/
+dist/
+tmp/
+.git/
+.github/
+.vscode/
+*.zip
+*.tar.gz
+*.rar
+**/node_modules/
+**/target/
+**/.angular/
