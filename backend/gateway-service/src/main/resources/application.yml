@@ -1,0 +1,68 @@
+server:
+  port: 8060
+
+spring:
+  application:
+    name: gateway-service
+  cloud:
+    gateway:
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+      routes:
+        - id: user-service
+          uri: lb://user-service
+          predicates:
+            - Path=/api/users/**
+        - id: institute-service
+          uri: lb://institute-service
+          predicates:
+            - Path=/api/institutes/**, /api/public/approved-institutes/**
+        - id: application-service
+          uri: lb://application-service
+          predicates:
+            - Path=/api/applications/**, /api/public/application-status/**
+        - id: document-service
+          uri: lb://document-service
+          predicates:
+            - Path=/api/documents/**
+        - id: inspection-service
+          uri: lb://inspection-service
+          predicates:
+            - Path=/api/inspections/**
+        - id: approval-service
+          uri: lb://approval-service
+          predicates:
+            - Path=/api/approvals/**
+        - id: notification-service
+          uri: lb://notification-service
+          predicates:
+            - Path=/api/notifications/**, /api/public/notices/**
+        - id: ai-integration-service
+          uri: lb://ai-integration-service
+          predicates:
+            - Path=/api/ai/**
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://registry-service:8761/eureka/

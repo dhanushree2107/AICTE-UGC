@@ -1,0 +1,137 @@
+{
+  "id": "aicte-realm",
+  "realm": "aicte-realm",
+  "enabled": true,
+  "roles": {
+    "realm": [
+      {
+        "name": "ROLE_SUPER_ADMIN",
+        "description": "Super Administrator with full system control"
+      },
+      {
+        "name": "ROLE_AICTE_ADMIN",
+        "description": "AICTE Admin role for high-level approvals"
+      },
+      {
+        "name": "ROLE_REGIONAL_OFFICER",
+        "description": "AICTE Regional Officer"
+      },
+      {
+        "name": "ROLE_REVIEWER",
+        "description": "Peer Reviewer of application packages"
+      },
+      {
+        "name": "ROLE_INSPECTION_COMMITTEE",
+        "description": "Inspection Committee Member"
+      },
+      {
+        "name": "ROLE_COLLEGE_ADMIN",
+        "description": "College Administrator who submits approval request"
+      }
+    ]
+  },
+  "groups": [],
+  "users": [
+    {
+      "username": "superadmin",
+      "enabled": true,
+      "email": "superadmin@aicte-india.org",
+      "firstName": "Super",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_SUPER_ADMIN"
+      ]
+    },
+    {
+      "username": "aicteadmin",
+      "enabled": true,
+      "email": "admin@aicte-india.org",
+      "firstName": "AICTE",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_AICTE_ADMIN"
+      ]
+    },
+    {
+      "username": "collegeadmin",
+      "enabled": true,
+      "email": "admin@mit.edu",
+      "firstName": "College",
+      "lastName": "Admin",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_COLLEGE_ADMIN"
+      ]
+    },
+    {
+      "username": "reviewer",
+      "enabled": true,
+      "email": "reviewer@aicte-india.org",
+      "firstName": "Reviewer",
+      "lastName": "User",
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": [
+        "ROLE_REVIEWER"
+      ]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "aicte-frontend",
+      "enabled": true,
+      "publicClient": true,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:4200"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "*"
+      ],
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": false,
+      "publicClient": true,
+      "protocol": "openid-connect"
+    },
+    {
+      "clientId": "aicte-backend",
+      "enabled": true,
+      "secret": "backend-client-secret-123456789",
+      "bearerOnly": false,
+      "publicClient": false,
+      "standardFlowEnabled": false,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": true,
+      "serviceAccountsEnabled": true,
+      "protocol": "openid-connect"
+    }
+  ]
+}

@@ -1,0 +1,188 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: aicte-postgres
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: aicte_db
+      POSTGRES_USER: aicte_user
+      POSTGRES_PASSWORD: aicte_password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aicte_user -d aicte_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: aicte-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0
+    container_name: aicte-keycloak
+    command: start-dev --import-realm
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: dev-file
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    healthcheck:
+      test: ["CMD-SHELL", "exec 3<>/dev/tcp/localhost/8080 && echo -e 'GET /health HTTP/1.1\r\nHost: localhost\r\n\r\n' >&3 && grep -q '200 OK' <&3"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+
+  ai-service:
+    build: ./ai-service
+    container_name: aicte-ai-service
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+    depends_on:
+      - redis
+
+  registry-service:
+    build:
+      context: ./backend
+      dockerfile: registry-service/Dockerfile
+    container_name: aicte-registry-service
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  gateway-service:
+    build:
+      context: ./backend
+      dockerfile: gateway-service/Dockerfile
+    container_name: aicte-gateway-service
+    ports:
+      - "8060:8060"
+    depends_on:
+      - registry-service
+      - keycloak
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - KEYCLOAK_ISSUER_URI=http://keycloak:8080/realms/aicte-realm
+
+  # Core services can be run collectively or as needed:
+  user-service:
+    build:
+      context: ./backend
+      dockerfile: user-service/Dockerfile
+    container_name: aicte-user-service
+    depends_on:
+      - postgres
+      - registry-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  institute-service:
+    build:
+      context: ./backend
+      dockerfile: institute-service/Dockerfile
+    container_name: aicte-institute-service
+    depends_on:
+      - postgres
+      - registry-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  application-service:
+    build:
+      context: ./backend
+      dockerfile: application-service/Dockerfile
+    container_name: aicte-application-service
+    depends_on:
+      - postgres
+      - registry-service
+      - redis
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  document-service:
+    build:
+      context: ./backend
+      dockerfile: document-service/Dockerfile
+    container_name: aicte-document-service
+    depends_on:
+      - postgres
+      - registry-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  inspection-service:
+    build:
+      context: ./backend
+      dockerfile: inspection-service/Dockerfile
+    container_name: aicte-inspection-service
+    depends_on:
+      - postgres
+      - registry-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  approval-service:
+    build:
+      context: ./backend
+      dockerfile: approval-service/Dockerfile
+    container_name: aicte-approval-service
+    depends_on:
+      - postgres
+      - registry-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  notification-service:
+    build:
+      context: ./backend
+      dockerfile: notification-service/Dockerfile
+    container_name: aicte-notification-service
+    depends_on:
+      - postgres
+      - registry-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  ai-integration-service:
+    build:
+      context: ./backend
+      dockerfile: ai-integration-service/Dockerfile
+    container_name: aicte-ai-integration-service
+    depends_on:
+      - postgres
+      - registry-service
+      - ai-service
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - AI_SERVICE_URL=http://ai-service:8000
+
+  frontend:
+    build: ./frontend
+    container_name: aicte-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - gateway-service
+
+volumes:
+  postgres_data:
+  redis_data:

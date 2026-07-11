@@ -1,0 +1,365 @@
+services:
+  # 1. Keycloak Authentication Server (SSO)
+  - type: web
+    name: aicte-keycloak
+    runtime: docker
+    dockerfilePath: keycloak/Dockerfile
+    dockerContext: keycloak
+    plan: free
+    envVars:
+      - key: KEYCLOAK_ADMIN
+        value: admin
+      - key: KEYCLOAK_ADMIN_PASSWORD
+        value: admin
+      - key: KC_DB
+        value: dev-file
+
+  # 2. Redis Caching Service (Render Managed Redis)
+  # Defined in the 'redis' section below
+
+  # 3. Python FastAPI AI Service (6 Agents)
+  - type: web
+    name: aicte-ai-service
+    runtime: docker
+    dockerfilePath: ai-service/Dockerfile
+    dockerContext: ai-service
+    plan: free
+    envVars:
+      - key: PORT
+        value: 8000
+      - key: REDIS_URL
+        fromRedis:
+          name: aicte-redis
+          property: connectionString
+
+  # 4. Spring Cloud Eureka Registry Service (Internal Only)
+  - type: pserv
+    name: aicte-registry-service
+    runtime: docker
+    dockerfilePath: registry-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+
+  # 5. Spring Cloud API Gateway Service (Public Facing)
+  - type: web
+    name: aicte-gateway-service
+    runtime: docker
+    dockerfilePath: gateway-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: http://aicte-registry-service:8761/eureka/
+      - key: KEYCLOAK_ISSUER_URI
+        value: http://aicte-keycloak:8080/realms/aicte-realm
+
+  # 6. User Service (Internal Only)
+  - type: pserv
+    name: aicte-user-service
+    runtime: docker
+    dockerfilePath: user-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: http://aicte-registry-service:8761/eureka/
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: DB_HOST
+        fromDatabase:
+          name: aicte-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: aicte-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: aicte-postgres
+          property: database
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: aicte-postgres
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: aicte-postgres
+          property: password
+
+  # 7. Institute Service (Internal Only)
+  - type: pserv
+    name: aicte-institute-service
+    runtime: docker
+    dockerfilePath: institute-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: http://aicte-registry-service:8761/eureka/
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: DB_HOST
+        fromDatabase:
+          name: aicte-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: aicte-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: aicte-postgres
+          property: database
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: aicte-postgres
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: aicte-postgres
+          property: password
+
+  # 8. Application Service (Internal Only)
+  - type: pserv
+    name: aicte-application-service
+    runtime: docker
+    dockerfilePath: application-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: http://aicte-registry-service:8761/eureka/
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: DB_HOST
+        fromDatabase:
+          name: aicte-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: aicte-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: aicte-postgres
+          property: database
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: aicte-postgres
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: aicte-postgres
+          property: password
+      - key: REDIS_HOST
+        value: aicte-redis
+
+  # 9. Document Service (Internal Only)
+  - type: pserv
+    name: aicte-document-service
+    runtime: docker
+    dockerfilePath: document-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: http://aicte-registry-service:8761/eureka/
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: DB_HOST
+        fromDatabase:
+          name: aicte-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: aicte-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: aicte-postgres
+          property: database
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: aicte-postgres
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: aicte-postgres
+          property: password
+
+  # 10. Inspection Service (Internal Only)
+  - type: pserv
+    name: aicte-inspection-service
+    runtime: docker
+    dockerfilePath: inspection-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: http://aicte-registry-service:8761/eureka/
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: DB_HOST
+        fromDatabase:
+          name: aicte-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: aicte-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: aicte-postgres
+          property: database
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: aicte-postgres
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: aicte-postgres
+          property: password
+
+  # 11. Approval Service (Internal Only)
+  - type: pserv
+    name: aicte-approval-service
+    runtime: docker
+    dockerfilePath: approval-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: http://aicte-registry-service:8761/eureka/
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: DB_HOST
+        fromDatabase:
+          name: aicte-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: aicte-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: aicte-postgres
+          property: database
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: aicte-postgres
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: aicte-postgres
+          property: password
+
+  # 12. Notification Service (Internal Only)
+  - type: pserv
+    name: aicte-notification-service
+    runtime: docker
+    dockerfilePath: notification-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: http://aicte-registry-service:8761/eureka/
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: DB_HOST
+        fromDatabase:
+          name: aicte-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: aicte-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: aicte-postgres
+          property: database
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: aicte-postgres
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: aicte-postgres
+          property: password
+
+  # 13. AI Integration Service (Internal Only)
+  - type: pserv
+    name: aicte-ai-integration-service
+    runtime: docker
+    dockerfilePath: ai-integration-service/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: docker
+      - key: EUREKA_CLIENT_SERVICEURL_DEFAULTZONE
+        value: http://aicte-registry-service:8761/eureka/
+      - key: SPRING_DATASOURCE_URL
+        value: jdbc:postgresql://${DB_HOST}:${DB_PORT}/${DB_NAME}
+      - key: DB_HOST
+        fromDatabase:
+          name: aicte-postgres
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: aicte-postgres
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: aicte-postgres
+          property: database
+      - key: SPRING_DATASOURCE_USERNAME
+        fromDatabase:
+          name: aicte-postgres
+          property: user
+      - key: SPRING_DATASOURCE_PASSWORD
+        fromDatabase:
+          name: aicte-postgres
+          property: password
+      - key: AI_SERVICE_URL
+        value: http://aicte-ai-service:8000
+
+  # 14. Angular Frontend Web Service (Public Facing)
+  - type: web
+    name: aicte-frontend
+    runtime: docker
+    dockerfilePath: frontend/Dockerfile
+    dockerContext: frontend
+    plan: free
+    # Will proxy /api/* requests internally to the gateway service
+
+# Managed PostgreSQL Database
+databases:
+  - name: aicte-postgres
+    databaseName: aicte_db
+    user: aicte_user
+    plan: free
+
+# Managed Redis Cache
+redis:
+  - name: aicte-redis
+    plan: free
+    ipAllowList: [] # Access restricted to Render private network
